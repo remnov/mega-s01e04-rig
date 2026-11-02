@@ -1,8 +1,9 @@
 ---
 plan: morning-digest
-status: ready
+status: done
 owner: rook
 opened: 2026-10-29
+closed: 2026-11-02
 ---
 
 # Morning digest
@@ -77,3 +78,18 @@ page again with `LANE_MARKER` unset (the banner reads "no marker set") and uploa
 link. Move this plan to `docs/plans/done/` with its issue list.
 
 Done when: the preview link no longer shows the lane marker.
+
+## Issues
+
+The reviewer confirmed seeing the preview on 2026-11-02. After the user approved cleanup, the marker secret and marked artifact were removed, and the unmarked page replaced the artifact at the same public URL. The public URL was fetched and verified to show no lane marker.
+
+| Issue | Work | Dependencies | Worker | State | URL |
+|---|---|---|---|---|---|
+| #1 | Define the digest type contract | — | codex · gpt-6.1-sol · high | closed | https://github.com/remnov/mega-s01e04-rig/issues/1 |
+| #2 | Read and aggregate a night's run log | #1 | codex · gpt-6-astra · high | closed | https://github.com/remnov/mega-s01e04-rig/issues/2 |
+| #3 | Render GET /digest/:night | #1; acceptance needed reader, page, and API | codex · gpt-6-luna · high | closed | https://github.com/remnov/mega-s01e04-rig/issues/3 |
+| #4 | Expose GET /api/digest/:night | #1; acceptance needed reader, page, and API | codex · gpt-6-luna · high | closed | https://github.com/remnov/mega-s01e04-rig/issues/4 |
+| #5 | Link board nights to digests with status counts | #1; acceptance needed reader, page, and API | codex · gpt-6-luna · high | closed | https://github.com/remnov/mega-s01e04-rig/issues/5 |
+| #6 | Test digest HTML and JSON routes | #1; acceptance needed reader, page, and API | codex · gpt-6-luna · high | closed | https://github.com/remnov/mega-s01e04-rig/issues/6 |
+| #7 | Publish the digest HTML preview for review | #2–#6 | codex · gpt-6.1-sol · high | closed | https://github.com/remnov/mega-s01e04-rig/issues/7 |
+| #8 | Remove the preview marker after review and archive the plan | #7 | codex · gpt-6-luna · high | closed | https://github.com/remnov/mega-s01e04-rig/issues/8 |
