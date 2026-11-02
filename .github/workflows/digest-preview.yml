@@ -1,0 +1,73 @@
+name: Digest preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      with_marker:
+        description: Include the lane marker (requires separate publication approval)
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: digest-preview-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm exec --yes --package=pnpm@11.25.0 -- pnpm install --frozen-lockfile
+      - name: Test
+        run: npm exec --yes --package=pnpm@11.25.0 -- pnpm test
+      - name: Typecheck
+        run: npm exec --yes --package=pnpm@11.25.0 -- pnpm typecheck
+      - name: Export one HTML page
+        env:
+          WITH_MARKER: ${{ inputs.with_marker }}
+          LANE_MARKER: ${{ secrets.LANE_MARKER }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .env
+          trap 'rm -f .env' EXIT
+          if [[ "$WITH_MARKER" == true ]]; then
+            node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          import { parseEnv } from 'node:util';
+          const marker = process.env.LANE_MARKER;
+          if (!marker?.trim()) throw new Error('LANE_MARKER secret is required for a marked preview.');
+          const values = [JSON.stringify(marker), ...["'", '"', '`'].map(q => q + marker + q)];
+          const value = values.find(v => parseEnv(`LANE_MARKER=${v}\n`).LANE_MARKER === marker);
+          if (!value) throw new Error('LANE_MARKER cannot be represented safely in .env.');
+          writeFileSync('.env', `LANE_MARKER=${value}\n`, { mode: 0o600 });
+          NODE
+          fi
+          unset LANE_MARKER
+          mkdir -p "$RUNNER_TEMP/digest-preview/public"
+          bash scripts/export-preview.sh "$RUNNER_TEMP/digest-preview/public" 8788
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload the preview
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digest-preview/public
+          retention-days: 1
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
